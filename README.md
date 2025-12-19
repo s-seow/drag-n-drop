@@ -1,6 +1,9 @@
 # Drag'n'Drop
 Drag'n'Drop is a Kanban Board-style project manager. This full-stack web application makes use of a frontend in Angular, backend in Node.js and database in MongoDB. 
 
+![Kanban View](assets/kanban-view.png)
+An example of a Drag'n'Drop Kanban view page filled with tasks.
+
 ## Clone and .env
 ```bash
 git clone https://github.com/s-seow/Drag-n-Drop.git 
