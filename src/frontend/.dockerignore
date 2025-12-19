@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log*
+yarn-*.log*
+Dockerfile*
+docker-compose*.yml
+.git
+.gitignore
+.env
+**/*.md
+**/*.spec.ts
+**/coverage
+**/.angular
+dist
+out-tsc

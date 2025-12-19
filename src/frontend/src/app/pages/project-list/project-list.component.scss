@@ -36,7 +36,7 @@
     width: 12px;
   }
   &::-webkit-scrollbar-thumb {
-    background: $purple;
+    background: var(--color-primary);
     border-radius: 20px;
   }
 
@@ -48,7 +48,7 @@
     border-radius: 5px;
 
     width: 100%;
-    background-color: $light;
+    background-color: var(--color-surface);
     color: #5f5f5f;
     margin-bottom: 10px;
 

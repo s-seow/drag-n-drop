@@ -1,19 +1,22 @@
 import { Injectable } from '@angular/core';
 import { WebRequestService } from './web-request.service';
 import { Router } from '@angular/router';
-import { shareReplay, tap } from 'rxjs';
+import { shareReplay, tap, throwError } from 'rxjs';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
-
 /**
  * Provides methods for authentication and CRUD operations related to authentication.
  */
 export class AuthService {
 
-  constructor(private webService: WebRequestService, private router: Router, private http: HttpClient) { }
+  constructor(
+    private webService: WebRequestService,
+    private router: Router,
+    private http: HttpClient
+  ) {}
 
   /**
    * Login
@@ -25,28 +28,36 @@ export class AuthService {
     return this.webService.login(username, password).pipe(
       shareReplay(),
       tap((res: HttpResponse<any>) => {
-        //auth tokens will be in the header of this response
-        this.setSession(res.body._id, res.headers.get('x-access-token') as string, res.headers.get('x-refresh-token') as string)
-        console.log("LOGGED IN");
+
+        const userId = res.body?._id as string;
+        const access = res.headers.get('x-access-token') as string;
+        const refresh = res.headers.get('x-refresh-token') as string;
+
+        this.setSession(userId, access, refresh);
+        console.log('LOGGED IN');
       })
-    )
+    );
   }
 
   /**
    * signup a new user
-   * @param username 
-   * @param email 
-   * @param password 
+   * @param username
+   * @param email
+   * @param password
    * @returns response
    */
   signup(username: string, email: string, password: string) {
     return this.webService.signup(username, email, password).pipe(
       shareReplay(),
       tap((res: HttpResponse<any>) => {
-        this.setSession(res.body._id, res.headers.get('x-access-token') as string, res.headers.get('x-refresh-token') as string)
-        console.log("succcessfully signed up and logged in");
+        const userId = res.body?._id as string;
+        const access = res.headers.get('x-access-token') as string;
+        const refresh = res.headers.get('x-refresh-token') as string;
+
+        this.setSession(userId, access, refresh);
+        console.log('Successfully signed up and logged in');
       })
-    )
+    );
   }
 
   /**
@@ -55,9 +66,7 @@ export class AuthService {
    * @returns response
    */
   forgetPassword(email: string) {
-    return this.http.post(`${this.webService.ROOT_URL}/send-email`, {
-      email
-    })
+    return this.http.post(`${this.webService.ROOT_URL}/send-email`, { email });
   }
 
   /**
@@ -68,9 +77,9 @@ export class AuthService {
    */
   resetPassword(token: string, password: string) {
     return this.http.post(`${this.webService.ROOT_URL}/reset-password`, {
-      token: token,
-      password: password
-    })
+      token,
+      password
+    });
   }
 
   /**
@@ -78,7 +87,6 @@ export class AuthService {
    */
   logout() {
     this.removeSession();
-
     this.router.navigateByUrl('/login');
   }
 
@@ -86,50 +94,45 @@ export class AuthService {
    * get access token from browser local storage
    * @returns access token
    */
-  getAccessToken() {
-    let accessToken = localStorage.getItem('x-access-token');
-    if (!accessToken !== null) return accessToken as string;
-    else return '';
+  getAccessToken(): string {
+    return localStorage.getItem('x-access-token') || '';
   }
 
   /**
    * get refresh token from browser local storage
    * @returns refresh token
    */
-  getRefreshToken() {
-    let refreshToken = localStorage.getItem('x-refresh-token');
-    if (!refreshToken !== null) return refreshToken as string;
-    else return '';
+  getRefreshToken(): string {
+    return localStorage.getItem('x-refresh-token') || '';
   }
 
   /**
    * get userid from browser local storage
    * @returns userid
    */
-  getUserId() {
-    let userId = localStorage.getItem('user-id');
-    if (!userId !== null) return userId as string;
-    else return '';
+  getUserId(): string {
+    return localStorage.getItem('user-id') || '';
   }
 
   /**
    * save access token to browser local storage
-   * @param accessToken 
+   * @param accessToken
    */
   setAccessToken(accessToken: string) {
-    localStorage.setItem('x-access-token', accessToken)
+    if (!accessToken) return; // prevent poisoning storage with empty token
+    localStorage.setItem('x-access-token', accessToken);
   }
 
   /**
    * set login session to browser local storage
-   * @param userId 
-   * @param accessToken 
-   * @param refreshToken 
+   * @param userId
+   * @param accessToken
+   * @param refreshToken
    */
   private setSession(userId: string, accessToken: string, refreshToken: string) {
-    localStorage.setItem('user-id', userId);
-    localStorage.setItem('x-access-token', accessToken);
-    localStorage.setItem('x-refresh-token', refreshToken);
+    if (userId) localStorage.setItem('user-id', userId);
+    if (accessToken) localStorage.setItem('x-access-token', accessToken);
+    if (refreshToken) localStorage.setItem('x-refresh-token', refreshToken);
   }
 
   /**
@@ -143,27 +146,34 @@ export class AuthService {
 
   /**
    * refresh access token
-   * @returns new access token
+   * @returns new access token response
    */
   getNewAccessToken() {
-    
+    const refreshToken = this.getRefreshToken();
+    const userId = this.getUserId();
 
-    return this.http.get(`${this.webService.ROOT_URL}/users/me/access-token`, { 
+    // If either is missing, refresh cannot succeed; force caller to handle.
+    if (!refreshToken || !userId) {
+      return throwError(() => new Error('Missing refresh token or user id'));
+    }
+
+    return this.http.get(`${this.webService.ROOT_URL}/users/me/access-token`, {
       headers: {
-        'x-refresh-token': this.getRefreshToken(),
-        '_id': this.getUserId()
+        'x-refresh-token': refreshToken,
+        '_id': userId
       },
       observe: 'response'
     }).pipe(
       tap((res: HttpResponse<any>) => {
-        this.setAccessToken(res.headers.get('x-access-token') ?? '');
+        const newAccess = res.headers.get('x-access-token') || '';
+        if (newAccess) this.setAccessToken(newAccess);
       })
-    )
+    );
   }
 
   /**
    * check if username exists
-   * @param username 
+   * @param username
    * @returns boolean
    */
   checkUser(username: string) {
@@ -172,7 +182,7 @@ export class AuthService {
 
   /**
    * check if email exists
-   * @param email 
+   * @param email
    * @returns boolean
    */
   checkEmail(email: string) {
@@ -189,7 +199,7 @@ export class AuthService {
 
   /**
    * get username specified by userid
-   * @param id 
+   * @param id
    * @returns username
    */
   getUsernameWithId(id: string) {

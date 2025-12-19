@@ -7,68 +7,83 @@
     <button class="button is-small dialog-button" (click)="close()">Ok</button>
   </div>
 </dialog>
+
 <div class="root">
+  <!-- Top Navbar -->
   <div class="navbar has-background-dark">
-    <div class="navbar-brand">
-      <div class="navbar-item">
-        <h1 class="app-name has-gradient-text">Kanbanize</h1>
+    <div class="navbar-inner">
+      <div class="navbar-brand">
+        <div class="navbar-item">
+          <h1 class="app-name has-gradient-text">Drag'n'Drop</h1>
+        </div>
       </div>
-    </div>
-    <div class="navbar-end">
-      <div class="navbar-item has-dropdown" id="navbarDropdown">
-        <a class="navbar-link has-text-primary" id="navbarButton">{{ username }}</a>
-        <div class="navbar-dropdown is-right is-boxed">
-          <a class="navbar-item has-text-danger" (click)="logout()">Log Out</a>
+
+      <div class="navbar-end">
+        <div class="navbar-item has-dropdown" id="navbarDropdown">
+          <a class="navbar-link has-text-primary" id="navbarButton">{{ username }}</a>
+          <div class="navbar-dropdown is-right is-boxed">
+            <a class="navbar-item has-text-danger" (click)="logout()">Log Out</a>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
   <div class="board" *ngIf="board">
+    <!-- Board Bar -->
     <div class="board-bar">
-      <div class="board-name-container">
-        <div class="board-name" id="title-container">
-          {{ board.title }}
+      <div class="board-bar-inner">
+        <div class="board-name-container">
+          <!-- Display mode -->
+          <div class="board-name-display" *ngIf="!isEditingTitle">
+            <div class="board-name">
+              {{ board.title }}
+            </div>
+
+            <button class="title-button" (click)="editTitleClick()" type="button" aria-label="Edit title">
+              <img src="../../../assets/edit-icon.svg" alt="Edit" />
+            </button>
+          </div>
+
+          <!-- Edit mode -->
+          <div class="board-name-edit" *ngIf="isEditingTitle">
+            <input
+              class="board-name-input input"
+              type="text"
+              [(ngModel)]="titleDraft"
+              (keydown)="onTitleKeydown($event)"
+              aria-label="Board title"
+            />
+
+            <button class="title-button" (click)="saveTitleClick()" type="button" aria-label="Save title">
+              <img src="../../../assets/save-icon.svg" alt="Save" />
+            </button>
+
+            <button class="title-button cancel" (click)="cancelTitleEdit()" type="button" aria-label="Cancel edit">
+              ✕
+            </button>
+          </div>
         </div>
-        <input
-          class="board-name-input input"
-          type="text"
-          placeholder="{{ board.title }}"
-          id="title-input"
-        />
-        <button
-          class="title-button edit"
-          (click)="editTitleClick()"
-          id="title-edit"
-        >
-          <img src="../../../assets/edit-icon.svg" />
-        </button>
-        <button
-          class="title-button save"
-          (click)="saveTitleClick()"
-          id="title-save"
-        >
-          <img src="../../../assets/save-icon.svg" />
+
+        <div class="dropdown" id="dropdown">
+          <div class="dropdown-trigger">
+            <button class="button is-small settings-button" id="board-options" aria-haspopup="true" aria-controls="dropdown-menu" type="button">
+              <img id="board-options-icon" src="../../../assets/gear-icon.svg" alt="Settings" />
+            </button>
+          </div>
+          <div class="dropdown-menu" id="dropdown-menu" role="menu">
+            <div class="dropdown-content">
+              <a class="dropdown-item" (click)="addUser()"> Add User </a>
+              <a class="dropdown-item" (click)="viewUsers()"> View Users </a>
+              <a class="dropdown-item has-text-danger" (click)="deleteBoardConfirm()"> Delete Board </a>
+            </div>
+          </div>
+        </div>
+
+        <button class="button-back" routerLink="/project-list" type="button">
+          ← Back to Project List
         </button>
       </div>
-
-			<div class="dropdown" id="dropdown">
-				<div class="dropdown-trigger">
-					<button class="button is-small settings-button" id="board-options" aria-haspopup="true" aria-controls="dropdown-menu">
-						<img id="board-options-icon" src="../../../assets/gear-icon.svg" />
-					</button>
-				</div>
-				<div class="dropdown-menu" id="dropdown-menu" role="menu">
-					<div class="dropdown-content">
-            <a class="dropdown-item " (click)="addUser()"> Add User </a>
-            <a class="dropdown-item " (click)="viewUsers()"> View Users </a>
-						<a class="dropdown-item has-text-danger" (click)="deleteBoardConfirm()"> Delete Board </a>
-					</div>
-				</div>
-			</div>
-
-      <button class="button-back" routerLink="/project-list">
-        ← Back to Project List
-      </button>
     </div>
 
     <div class="board-wrapper">
@@ -79,11 +94,12 @@
               {{ column.title }}
             </div>
             <div class="button-container">
-              <button class="add-task-button" (click)="addTaskClick(column)">
+              <button class="add-task-button" (click)="addTaskClick(column)" type="button">
                 +
               </button>
             </div>
           </div>
+
           <div
             class="tasks-container"
             cdkDropList
@@ -97,7 +113,9 @@
                   {{ taskcard.title }}
                 </div>
               </div>
+
               <div class="task-body">{{ taskcard.description }}</div>
+
               <div class="task-footer">
                 <div class="footer-left">
                   <div class="assigned-to" *ngIf="taskcard.assignedTo">
@@ -107,67 +125,48 @@
                     Due: {{ taskcard.dueDate | date:'dd/MM/yyyy' }}
                   </div>
                 </div>
+
                 <div class="field is-grouped">
                   <button
                     class="task-button priority"
                     *ngIf="taskcard.priority"
                     (click)="togglePriority(taskcard)"
+                    type="button"
+                    aria-label="Unmark priority"
                   >
-                    <img
-                      class="task-icons"
-                      src="../../../assets/flag-icon-red.svg"
-                    />
+                    <img class="task-icons" src="../../../assets/flag-icon-red.svg" alt="Priority" />
                   </button>
+
                   <button
                     class="task-button button-hover"
                     *ngIf="!taskcard.priority"
                     (click)="togglePriority(taskcard)"
+                    type="button"
+                    aria-label="Mark priority"
                   >
-                    <img
-                      class="task-icons"
-                      src="../../../assets/flag-icon-grey.svg"
-                    />
+                    <img class="task-icons" src="../../../assets/flag-icon-grey.svg" alt="Priority" />
                   </button>
-                  <button
-                    class="task-button button-hover"
-                    (click)="editTaskClick(taskcard)"
-                  >
-                    <img
-                      class="task-icons"
-                      src="../../../assets/edit-icon.svg"
-                    />
+
+                  <button class="task-button button-hover" (click)="editTaskClick(taskcard)" type="button" aria-label="Edit task">
+                    <img class="task-icons" src="../../../assets/edit-icon.svg" alt="Edit" />
                   </button>
-                  <button
-                    class="task-button button-hover"
-                    (click)="commentTaskClick(taskcard)"
-                  >
-                    <img
-                      class="task-icons"
-                      src="../../../assets/comment-icon.svg"
-                    />
+
+                  <button class="task-button button-hover" (click)="commentTaskClick(taskcard)" type="button" aria-label="Comments">
+                    <img class="task-icons" src="../../../assets/comment-icon.svg" alt="Comments" />
                   </button>
-                  <button
-                    class="task-button button-hover"
-                    (click)="assignTask(taskcard)"
-                  >
-                    <img
-                      class="task-icons"
-                      src="../../../assets/assign-icon.svg"
-                    />
+
+                  <button class="task-button button-hover" (click)="assignTask(taskcard)" type="button" aria-label="Assign">
+                    <img class="task-icons" src="../../../assets/assign-icon.svg" alt="Assign" />
                   </button>
-                  <button
-                    class="task-button button-hover"
-                    (click)="deleteTaskcardConfirm(taskcard)"
-                  >
-                    <img
-                      class="task-icons"
-                      src="../../../assets/trash-icon-grey.svg"
-                    />
+
+                  <button class="task-button button-hover" (click)="deleteTaskcardConfirm(taskcard)" type="button" aria-label="Delete task">
+                    <img class="task-icons" src="../../../assets/trash-icon-grey.svg" alt="Delete" />
                   </button>
                 </div>
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>

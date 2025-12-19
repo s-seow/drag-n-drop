@@ -11,6 +11,8 @@ const bodyParser = require('body-parser');
 const { Board, Column, TaskCard, User, ResetToken, Comment } = require('./api/models');
 const e = require('express');
 
+const env = process.env;
+
 /* MIDDLEWARE */
 
 // Load middleware
@@ -24,6 +26,8 @@ app.use(function(req, res, next) {
     res.header('Access-Control-Expose-Headers', 'x-access-token, x-refresh-token');
     next();
 });
+
+
 
 //check whether the request has a valid jwt access token
 let authenticate = (req, res, next) => {
@@ -79,6 +83,8 @@ let verifySession = (req, res, next) => {
 }
 
 /* END MIDDLEWARE */
+
+app.get('/health', (_req, res) => res.status(200).send('OK'));
 
 /* ROUTE HANDLERS */
 

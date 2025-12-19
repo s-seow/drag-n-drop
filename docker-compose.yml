@@ -28,3 +28,40 @@ services:
 
 volumes:
   mongo_data:
+
+
+##docker-compose.eb.yml
+# services:
+#   mongo:
+#     image: mongo:6
+#     restart: always
+#     volumes:
+#       - mongo_data:/data/db
+
+#   backend:
+#     build:
+#       context: .
+#       dockerfile: src/backend/Dockerfile
+#     environment:
+#       PORT: "8080"
+#       MONGO_URI: mongodb://mongo:27017/DragNDrop
+#       SMTP_SERVICE: ${SMTP_SERVICE:-}
+#       SMTP_USER: ${SMTP_USER:-}
+#       SMTP_PASS: ${SMTP_PASS:-}
+#       SMTP_FROM: ${SMTP_FROM:-}
+#     depends_on:
+#       - mongo
+#     expose:
+#       - "8080"
+
+#   web:
+#     build:
+#       context: src/frontend
+#       dockerfile: Dockerfile
+#     ports:
+#       - "80:80"
+#     depends_on:
+#       - backend
+
+# volumes:
+#   mongo_data:
